@@ -84,7 +84,6 @@ def main(_):
 	        if not os.path.exists(os.path.join(savepath,'%s' %(model))):
 	             os.makedirs(os.path.join(savepath,'%s' %(model)))
 	        savename = os.path.join(savepath,'%s/predict_%03d.jpg' % (model,shuf[m]))
-		pdb.set_trace()
 	        scipy.misc.imsave(savename, predict.astype(np.uint8))
 	        savename = os.path.join(savepath,'%s/gt_%03d.jpg' % (model,shuf[m]))
 	        scipy.misc.imsave(savename, np.squeeze(depth_img).astype(np.uint8))
