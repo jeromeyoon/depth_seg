@@ -13,7 +13,7 @@ def create_mask(images):
     return mask
 
 
-def get_image(image_path,gt_path,image_size,is_crop=True,vgg_mean):
+def get_image(image_path,gt_path,image_size,vgg_mean,is_crop=True):
     input_ = imread(image_path[:-1])
     red = input_[:,:,0]
     green = input_[:,:,1]
@@ -28,7 +28,7 @@ def get_image(image_path,gt_path,image_size,is_crop=True,vgg_mean):
     gt = sio.loadmat(gt_path[:-1])
     gt = gt['depth']
     gt = np.expand_dims(gt,axis=-1)
-    concat = np.concatenate((input_,gt),axis=3) 
+    concat = np.concatenate((input_,gt),axis=2) 
     if is_crop:
         return center_crop(concat,image_size)
     else:

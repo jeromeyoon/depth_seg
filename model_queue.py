@@ -76,17 +76,20 @@ class FCN(object):
             print(" [!] Load failed...")
 
         # loda training and validation dataset path
-        train_rgb_data = open("db/oxford_data2_rgb_train.txt")
-        tmp1 = train_rgb_data.readlines()
+        train_rgb_data = open("db/Oxford_data2_RGB_train.txt")
+        rgbtmp1 = train_rgb_data.readlines()
         train_rgb_data = open("db/Oxford_data1_RGB_train.txt")
-        tmp2 = train_rgb_data.readlines()
-	train_rgblist = tmp1 + tmp2	
-        train_depth_data = open("db/oxford_data2_depth_train.txt")
-        tmp1 = train_depth_data.readlines()
-        train_detph_data = open("db/Oxford_data1_depth_train.txt")
-        tmp2 = train_depth_data.readlines()
-	train_depthlist = tmp1 + tmp2
-
+        rgbtmp2 = train_rgb_data.readlines()
+	train_rgblist = rgbtmp1 + rgbtmp2
+	
+        train_depth_data = open("db/Oxford_data2_depth_train.txt")
+        depthtmp1 = train_depth_data.readlines()
+        train_depth_data = open("db/Oxford_data1_depth_train.txt")
+        depthtmp2 = train_depth_data.readlines()
+	train_depthlist = depthtmp1 + depthtmp2
+	
+	shuf = range(len(train_rgblist))
+	random.shuffle(shuf)
         val_rgb_data = open("db/Oxford_data1_RGB_val.txt")
         val_rgblist = val_rgb_data.readlines()
         val_depth_data = open("db/Oxford_data1_depth_val.txt")
@@ -95,13 +98,11 @@ class FCN(object):
 	VGG_mean =[103.939,116.779,123.68]
 	batch_idxs = min(len(train_rgblist), config.train_size)/config.batch_size
 	val_batch_idxs = min(len(val_rgblist), config.train_size)/config.batch_size
-	shuf = range(len(train_rgblist))
-	random.shuffle(shuf)
 	val_range = range(len(val_rgblist))
 	if self.use_queue:
 	    # creat thread
 	    coord = tf.train.Coordinator()
-            num_thread =8
+            num_thread =16
             for i in range(num_thread):
  	        t = threading.Thread(target=self.load_and_enqueue,args=(coord, train_rgblist, train_depthlist, shuf,i,num_thread))
 	 	t.start()
@@ -119,8 +120,7 @@ class FCN(object):
 	    	    train_log = open(os.path.join("logs",'train_%s.log' %config.dataset),'aw')
 	    	    val_log = open(os.path.join("logs",'val_%s.log' %config.dataset),'aw')
 
-		#for idx in xrange(0,batch_idxs):
-		for idx in xrange(0,1):
+		for idx in xrange(0,batch_idxs):
         	     start_time = time.time()
 		     _,loss,pred,logits =self.sess.run([train_op,self.loss,self.pred_seg,self.logits],feed_dict={self.keep_prob:self.dropout})
 		   
@@ -130,25 +130,25 @@ class FCN(object):
 
 		train_log.write('epoch %06d mean_loss:%.6f\n' %(epoch,sum_loss/batch_idxs))
 		train_log.close()
-	        self.save(config.checkpoint_dir,global_step1)
-
+	        self.save(config.checkpoint_dir,epoch)
+		"""
 		#### Validation ####	
 		for idx in xrange(0,val_batch_idxs):
 		     batch_files = val_range[idx*config.batch_size:(idx+1)*config.batch_size]
-    		     batches = get_image(val_rgblist[batch_file],val_depthlist[batch_file],self.image_size,is_crop=self.is_crop,VGG_mean)		     
+    		     batches = [get_image(val_rgblist[batch_file],val_depthlist[batch_file],self.image_size,VGG_mean,is_crop=self.is_crop)for batch_file in batch_files]		    
 		     batches = np.array(batches).astype(np.float32)
 		     batch_images = np.reshape(batches[:,:,:,:3],[config.batch_size,self.image_size,self.image_size,3])
 		     batch_depths = np.reshape(batches[:,:,:,-1],[config.batch_size,self.image_size,self.image_size,1])
 
         	     start_time = time.time()
-		     _,loss =self.sess.run([self.loss],feed_dict={self.rgb_images:batch_images,self.depth_images:batch_depths,self.keep_prob:1.0})
-		     sum_valloss += loss
+		     loss =self.sess.run([self.loss],feed_dict={self.rgb_images:batch_images,self.depth_images:batch_depths,self.keep_prob:1.0})
+		     sum_valloss += loss[0]
 		     if idx % 50 ==0:
 		         print("Epoch: [%2d] Val[%4d/%4d] time: %4.4f loss:%.6f" \
-		         % (epoch, idx, batch_idxs,time.time() - start_time,loss))
+		         % (epoch, idx, val_batch_idxs,time.time() - start_time,loss))
 		val_log.write('epoch %06d mean_loss:%.6f\n' %(epoch,sum_valloss/val_batch_idxs))
 		val_log.close()
-
+		"""
 	else:
 	    print('You should use multi thread \n')
 	    """
