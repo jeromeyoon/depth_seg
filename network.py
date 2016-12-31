@@ -145,7 +145,7 @@ class networks(object):
         :param keep_prob:
         :return:
         """
-	NUM_OF_CLASSESS = 16
+	NUM_OF_CLASSESS = 51
 	IMAGE_SIZE = 224
         print("setting up vgg initialized conv layers ...")
         model_data = self.data

@@ -48,9 +48,10 @@ def main(_):
         if FLAGS.is_train:
             fcn.train(FLAGS)
         else:
-            train_rgb_data = open("db/oxford_data2_rgb_train.txt")
+	    VGG_mean =[103.939,116.779,123.68]
+            train_rgb_data = open("db/Oxford_data1_RGB_train.txt")
             train_rgblist = train_rgb_data.readlines()
-            train_depth_data = open("db/oxford_data2_depth_train.txt")
+            train_depth_data = open("db/Oxford_data1_depth_train.txt")
             train_depthlist = train_depth_data.readlines()
 	    shuf = range(0,len(train_rgblist))
             random.shuffle(shuf)
